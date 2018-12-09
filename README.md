@@ -1,17 +1,14 @@
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active) 
-[![Travis-CI Build Status](https://travis-ci.org/gisma/uavRst.svg?branch=master)](https://travis-ci.org/gisma/uavRst)
+<a href="https://cran.r-project.org/web/checks/check_results_uavRst.html"><img border="0" src="http://www.r-pkg.org/badges/version/uavRst" alt="CRAN version"></a>
+![](https://cranlogs.r-pkg.org/badges/grand-total/uavRst?color=green)
 [![GitHub last commit](https://img.shields.io/github/last-commit/google/skia.svg)](/master/)
 [![License](https://img.shields.io/badge/license-GPL%20%28%3E=%203%29-lightgrey.svg?style=flat)](http://www.gnu.org/licenses/gpl-3.0.html)
 
-# Unmanned Aerial Vehicle Remote Sensing Tools
+# Unmanned Aerial Vehicle R  Tools
 The `uavR` tools consist of two packages:
 
-  * mission planning ```uavRmp``` (already on [CRAN](https://CRAN.R-project.org/package=uavRmp))
-  * remote sensing toolbox ```uavRst```
-
-## Mission Planning - uavRmp
-
-The `uavRmp` package provides functions for rtf-UAV based autonomous mission planning. In the first place it is a simple and open source planning tool to plan autonomous terrainfollowing monitoring flights of low budget drones based on ```R```. It provides an easy workflow for survey planning including battery-dependent task splitting, obstacle avoiding departures, and approaches of each monitoring chunks or spatial position. 
+  * mission planning ```uavRmp``` ([CRAN](https://CRAN.R-project.org/package=uavRmp))
+  * remote sensing toolbox ```uavRst```   ([CRAN](https://CRAN.R-project.org/package=uavRst))
 
 
 ## Unmanned Aerial Vehicle Remote Sensing Toolbox - uavRst
@@ -30,14 +27,15 @@ Nevertheless all mentioned software packages have to be installed correctly on y
 A full list of necessary libaries and binaries beyond ```R``` will hopefully (soon) be provided.
 
 ## Wiki
-You will find some tutorials and examples at the uavRst Wiki. Please feel free to participate.
+You will find some tutorials and examples at the uavRst [Wiki](https://github.com/gisma/uavRst/wiki). Please feel free to participate.
 
-## CRAN
 
-The CRAN checks are passing - so it is only a question of documentation and time until it will be submitted... however it runs fine for now ...
+## Installation
 
-To install from ```github```  you need to have installed the ```devtools``` package.
+The master branch is a github mirror for the `CRAN` version. 
+
+To install the actual development version from ```github```  you need to have installed the ```devtools``` package.
 
 ```R
-devtools::install_github("gisma/uavRst", ref = "master")
+devtools::install_github("gisma/uavRst", ref = "develop")
 ```

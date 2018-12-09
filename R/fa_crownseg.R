@@ -11,7 +11,8 @@
 #' height of \code{treepos}.
 #'@param minTreeAltParam character. code for the percentile that is used as tree height treshold. It is build using the key letters \code{chmQ} and adding the percentile i.e. "10". Default is \code{chmQ20}
 #'@param chm raster*. Canopy height model in \code{raster} format. Should be the same that was used to create the input for \code{treepos}.
-#' @param maxCrownArea numeric. A single value of the maximum individual tree crown radius expected. Default 10.0 m.
+#' @param maxCrownArea numeric. A single value of the maximum projected tree crown area allowed. Default 100 sqm.
+#' @param minCrownArea numeric. A single value of the minimum projected tree crown area allowed. Default 3 sqm
 #'@param leafsize       integer. bin size of grey value sampling range from 1 to 256 see also: \href{http://www.saga-gis.org/saga_tool_doc/6.2.0/imagery_segmentation_3.html}{SAGA GIS Help}
 #'@param normalize      integer. logical switch if data will be normalized (1) see also: \href{http://www.saga-gis.org/saga_tool_doc/6.2.0/imagery_segmentation_3.html}{SAGA GIS Help}
 #'@param neighbour      integer. von Neumanns' neighborhood (0) or Moore's (1) see also: \href{http://www.saga-gis.org/saga_tool_doc/6.2.0/imagery_segmentation_3.html}{SAGA GIS Help}
@@ -31,8 +32,8 @@
 #' require(link2GI)
 #' ##- linkages
 #' ##- create and check the links to the GI software
-#' giLinks<-uavRst::linkAll()
-#' if (giLinks$saga$exist & giLinks$otb$exist & giLinks$grass$exist) {
+#' giLinks<-uavRst::linkAll(linkItems = c("saga","gdal"))
+#' if (giLinks$saga$exist ) {
 #'
 #' ##- project folder
 #' projRootDir<-tempdir()
@@ -54,15 +55,15 @@
 #' ##- tree segmentation
 #' crowns_GWS <- chmseg_GWS( treepos = trp_seg[[1]],
 #'                       chm = chm_seg[[1]],
-#'                       minTreeAlt = 2,
+#'                       minTreeAlt = 10,
 #'                       neighbour = 0,
 #'                       thVarFeature = 1.,
 #'                       thVarSpatial = 1.,
-#'                       thSimilarity = 0.00001,
-#'                       giLinks = giLinks )
+#'                       thSimilarity = 0.003,
+#'                       giLinks = giLinks )[[2]]
 #'
 #'##- visualize it
-#' mapview::mapview(crowns_GWS,zcol="chmMEAN")
+#'raster::plot(crowns_GWS)
 #' }
 #'}
 
@@ -72,7 +73,8 @@
 chmseg_GWS <- function(treepos = NULL,
                        chm = NULL,
                        minTreeAlt         =2,
-                       minTreeAltParam = "chmQ20",
+                       minTreeAltParam = "chm_Q20",
+                       minCrownArea =  3,
                        maxCrownArea = 100,
                        leafsize       = 256,
                        normalize      = 0,
@@ -85,14 +87,14 @@ chmseg_GWS <- function(treepos = NULL,
                        majorityRadius    = 3.000,
                        parallel = 1,
                        giLinks = NULL) {
-  if (!exists("path_run")) path_run = paste0(getwd(),"/")
+  if (!exists("path_run")) path_run = tempdir()
   proj<- raster::crs(treepos)
   if (class(treepos) %in% c("RasterLayer", "RasterStack", "RasterBrick")) {
-    raster::writeRaster(treepos,file.path(path_run,"treepos.sdat"),overwrite = TRUE,NAflag = 0)
+    raster::writeRaster(treepos,file.path(R.utils::getAbsolutePath(path_run),"treepos.sdat"),overwrite = TRUE,NAflag = 0)
   }
   if (class(chm) %in% c("RasterLayer", "RasterStack", "RasterBrick")) {
     chm[chm<minTreeAlt] = -1
-    raster::writeRaster(chm,file.path(path_run,"chm.sdat"),overwrite = TRUE,NAflag = 0)
+    raster::writeRaster(chm,file.path(R.utils::getAbsolutePath(path_run),"chm.sdat"),overwrite = TRUE,NAflag = 0)
   }
 
 
@@ -105,18 +107,19 @@ chmseg_GWS <- function(treepos = NULL,
 
   gdal <- giLinks$gdal
   saga <- giLinks$saga
-  sagaCmd<-saga$sagaCmd
-  invisible(env<-RSAGA::rsaga.env(path =saga$sagaPath,modules = saga$sagaModPath))
+  sagaCmd <- R.utils::getAbsolutePath(saga$sagaCmd)
+  if (Sys.info()["sysname"]=="Windows") saga$sagaPath <- utils::shortPathName(saga$sagaPath)
+  invisible(env<-RSAGA::rsaga.env(path =saga$sagaPath))
 
-  param_list <- paste0(path_run,segmentationBands,".sgrd;",collapse = "")
+  param_list <- paste0(file.path(R.utils::getAbsolutePath(path_run),paste0(segmentationBands,".sgrd;")),collapse = "")
 
   # Start final segmentation algorithm as provided by SAGA's seeded Region Growing segmentation (imagery_segmentation 3)
   # TODO sensitivity analysis of the parameters
 
   RSAGA::rsaga.geoprocessor(lib = "imagery_segmentation", module = 3,
-                            param = list(SEEDS = paste(path_run,"treepos.sgrd", sep = ""),
+                            param = list(SEEDS =  file.path(R.utils::getAbsolutePath(path_run),"treepos.sgrd"),
                                          FEATURES = param_list,
-                                         SEGMENTS = paste(path_run,"crowns.sgrd", sep = ""),
+                                         SEGMENTS = file.path(R.utils::getAbsolutePath(path_run),"crowns.sgrd"),
                                          LEAFSIZE = leafsize,
                                          NORMALIZE = normalize,
                                          NEIGHBOUR = neighbour,
@@ -127,58 +130,111 @@ chmseg_GWS <- function(treepos = NULL,
                             env = env,
                             intern = TRUE,
                             invisible = FALSE,show.output.on.console = TRUE)
+    
+   seg_GWS<-fileProcStatus(module = "imagerysegementation3",file = "crowns.sgrd",listname = "seg")
 
+  
   # fill the holes inside the crowns (simple approach)
   # TODO better segmentation
-  if (majorityRadius > 0){
-    outname<- "sieve_pre_tree_crowns.sdat"
-    ret <- system(paste0("gdal_sieve.py -8 ",
-                         path_run,"crowns.sdat ",
-                         path_run,outname,
-                         " -of SAGA"),
-                  intern = TRUE)
+  if (majorityRadius > 0 ){
+    outname<- "crowns1.sdat"
+    
+    if (!is.null(gdal$version$py[[1]])){
+      if (grepl(gdal$version$py[[1]][2,1],pattern = "gdal"))
+        ret <- system(paste0(gdal$version$py[[1]][17,]," -8 ",
+                             file.path(R.utils::getAbsolutePath(path_run)),"/","crowns.sdat ",
+                             file.path(R.utils::getAbsolutePath(path_run)),"/",outname,
+                             " -of SAGA"), 
+                      intern = TRUE)}
+    else {
+      file.copy(file.path(R.utils::getAbsolutePath(path_run),"/crowns.sgrd"),file.path(R.utils::getAbsolutePath(path_run),"/crowns1.sgrd"),overwrite = TRUE)
+      file.copy(file.path(R.utils::getAbsolutePath(path_run),"/crowns.sdat"),file.path(R.utils::getAbsolutePath(path_run),"/crowns1.sdat"),overwrite = TRUE)
+      cat(getCrayon()[[2]]("\n GDAL Python module 'sieve' is NOT found. Expected to be at: "),
+          getCrayon()[[4]](names(gdal$python_utilities),"\n" ))
+      }
     # apply majority filter for smoothing the extremly irregular crown boundaries
+  } else {
+    file.copy(file.path(R.utils::getAbsolutePath(path_run),"/crowns.sgrd"),file.path(R.utils::getAbsolutePath(path_run),"/crowns1.sgrd"),overwrite = TRUE)
+    file.copy(file.path(R.utils::getAbsolutePath(path_run),"/crowns.sdat"),file.path(R.utils::getAbsolutePath(path_run),"/crowns1.sdat"),overwrite = TRUE)
+}
+    if (RSAGA::rsaga.get.version(env = env) > "3.0.0") {
     ret <- system(paste0(sagaCmd, " grid_filter 6 ",
-                         " -INPUT "   ,path_run,"sieve_pre_tree_crowns.sgrd",
-                         " -RESULT "  ,path_run,"crowns.sgrd",
-                         " -MODE 0",
-                         " -RADIUS "  ,majorityRadius,
+                         " -INPUT "   ,file.path(R.utils::getAbsolutePath(path_run)),"/crowns1.sgrd",
+                         " -RESULT "  ,file.path(R.utils::getAbsolutePath(path_run)),"/crowns2.sgrd",
+                         " -TYPE 0",
+                         " -KERNEL_RADIUS "  ,majorityRadius,
                          " -THRESHOLD 0.0 "),
-                  intern = TRUE)
-  }
+                  intern = TRUE)  
+    } 
+    else {
+      ret <- system(paste0(sagaCmd, " grid_filter 6 ",
+                           " -INPUT "   ,file.path(R.utils::getAbsolutePath(path_run)),"/crowns1.sgrd",
+                           " -RESULT "  ,file.path(R.utils::getAbsolutePath(path_run)),"/crowns2.sgrd",
+                           " -MODE 0",
+                           " -RADIUS "  ,majorityRadius,
+                           " -THRESHOLD 0.0 "),
+                    intern = TRUE)
+    }
+  
 
 
+
+
+
+   
+   seg_GWS<-append(seg_GWS,fileProcStatus("sievefilter","crowns1.sgrd",listname = "seg"))
   # convert filtered crown clumps to shape format
   ret <- system(paste0(sagaCmd, " shapes_grid 6 ",
-                       " -GRID "     ,path_run,"crowns.sgrd",
-                       " -POLYGONS " ,path_run,"crowns.shp",
+                       " -GRID "     ,file.path(R.utils::getAbsolutePath(path_run)),"/crowns2.sgrd",
+                       " -POLYGONS " ,file.path(R.utils::getAbsolutePath(path_run)),"/crowns.shp",
                        " -CLASS_ALL 1" ,
                        " -CLASS_ID 1.0",
                        " -SPLIT 1"),
                 intern = TRUE)
-  crowns <- rgdal::readOGR(path_run,"crowns", verbose = FALSE)
+  
+  seg_GWS<-append(seg_GWS,fileProcStatus("shapes_grid6","crowns.shp",listname = "seg"))
+  if (seg_GWS$shapes_grid6)
+    crowns   <- shp2so(file.path(R.utils::getAbsolutePath(paste0(path_run,"/crowns.shp"))))
+    # crowns <- rgdal::readOGR(dsn = file.path(R.utils::getAbsolutePath(path_run)),
+    #                        layer = "crowns", 
+    #                        verbose = FALSE)
+  else return(cat(paste0("File ",file.path(R.utils::getAbsolutePath(path_run)),"/crowns.shp not found \n")))
+  
   #crowns<-tree_crowns[tree_crowns$VALUE > 0,]
   sp::proj4string(crowns)<-proj
   
   
   # extract chm stats by potential crown segments
   statRawCrowns <- uavRst::poly_stat(c("chm"),
-                                     spdf = crowns,parallel = parallel)
+                                     spdf = crowns,
+                                     path_run = path_run,
+                                     parallel = parallel,
+                                     giLinks = giLinks)
+ 
+  seg_GWS<-append(seg_GWS,fileProcStatus("poly_stat","spdf.shp",listname = "seg"))
+  
+  if (seg_GWS$poly_stat)
+{    rgdal::writeOGR(obj = statRawCrowns,
+                    dsn = file.path(R.utils::getAbsolutePath(path_run)),
+                    layer = "crownsstat",
+                    driver= "ESRI Shapefile",
+                    overwrite=TRUE)
+  }
+  else return(cat(paste0("File ",file.path(R.utils::getAbsolutePath(path_run)),"spdf.shp not found \n")))
+  
 
-  rgdal::writeOGR(obj = statRawCrowns,
-                  dsn = path_run,
-                  layer = "crowns",
-                  driver= "ESRI Shapefile",
-                  overwrite=TRUE)
   # simple filtering of crownareas based on tree height min max area and artifacts at the analysis/image borderline
-  tree_crowns <- crown_filter(crownFn = paste0(path_run,"crowns.shp"),
-                              minTreeAlt = 0.0,
-                              minCrownArea = 0,
+  tree_crowns <- crown_filter(crownFn = file.path(R.utils::getAbsolutePath(path_run),"crownsstat.shp"),
+                              minTreeAlt = minTreeAlt,
+                              minCrownArea = minCrownArea,
                               maxCrownArea = maxCrownArea,
-                              minTreeAltParam = "chmQ20" )[[2]]
-
+                              minTreeAltParam = minTreeAltParam )
+  
+  #nrow(tree_crowns[[1]])
   options(warn=0)
   cat("segmentation finsihed...\n")
+  sp::proj4string(statRawCrowns)<-sp::proj4string(tree_crowns[[1]])
+  tree_crowns<- append(tree_crowns,statRawCrowns)
   return(tree_crowns)
 }
 
@@ -219,6 +275,7 @@ chmseg_GWS <- function(treepos = NULL,
 #'
 #' ## Visualisation
 #' raster::plot(crownsFT)
+#' 
 
 
 
@@ -231,7 +288,7 @@ chmseg_FT <- function(treepos = NULL,
                       format = "polygons",
                       winRadius = 1.5,
                       verbose = FALSE) {
-  if (!exists("path_run")) path_run = paste0(getwd(),"/")
+
   if (class(treepos) %in% c("RasterLayer", "RasterStack", "RasterBrick")) {
     # add projection of chm TODO
     pr<-raster::crs(raster::projection(raster::raster(chm)))
@@ -253,12 +310,6 @@ chmseg_FT <- function(treepos = NULL,
                                  minHeight = minTreeAlt,
                                  verbose = verbose)
 
-  # # Writing Shapefile
-  # rgdal::writeOGR(obj = crownsFT,
-  #                 dsn = paste0(path_run, "crowns_FT"),
-  #                 layer = "crowns_FT",
-  #                 driver= "ESRI Shapefile",
-  #                 overwrite=TRUE)
   
   
   
@@ -274,7 +325,7 @@ chmseg_FT <- function(treepos = NULL,
 #' number of crown segments equal to the number of treetops.
 #' @param chm raster*. Canopy height model in \code{raster} or \code{SpatialGridDataFrame} file format. Should be the same that was used to create
 #' the input for \code{treepos}.
-#' @param maxCrownArea numeric. A single value of the maximum individual tree crown radius expected. Default 10.0 m.
+#' @param maxCrownArea numeric. A single value of the minimum projected tree crown area allowed. Default is 100 sqm
 #' height of \code{treepos}.
 #' @param exclusion numeric. A single value from 0 to 1 that represents the percent of pixel exclusion.
 
@@ -304,9 +355,9 @@ chmseg_FT <- function(treepos = NULL,
 
 chmseg_RL <- function(treepos = NULL,
                       chm = NULL,
-                      maxCrownArea = 150,
+                      maxCrownArea = 100,
                       exclusion = 0.2) {
-  if (!exists("path_run")) path_run = paste0(getwd(),"/")
+  if (!exists("path_run")) path_run = tempdir()
   if (class(treepos) %in% c("RasterLayer", "RasterStack", "RasterBrick")) {
     treepos <- raster::rasterToPoints(treepos,spatial = TRUE)
   } else {
@@ -329,7 +380,7 @@ chmseg_RL <- function(treepos = NULL,
   # Writing Shapefile
   rgdal::writeOGR(
     obj = canopy[[1]],
-    dsn = paste0(path_run, "crowns_LR"),
+    dsn = file.path(R.utils::getAbsolutePath(path_run)),
     layer = "crowns_LR",
     driver = "ESRI Shapefile",
     overwrite = TRUE
@@ -348,7 +399,7 @@ chmseg_RL <- function(treepos = NULL,
 #'
 #' @param chm raster*, Canopy height model in \code{raster} or \code{SpatialGridDataFrame} file format. Should be the same that was used to create
 #' the input for \code{treepos}.
-#' @param maxCrownArea numeric. A single value of the maximum individual tree crown radius expected. Default 10.0 m.
+#' @param maxCrownArea numeric. A single value of the maximum projected tree crown area allowed. Default 100 sqm.
 #' height of \code{treepos}.
 #' @param EPSG character. The EPSG code of the reference system of the CHM raster image.
 #' @param movingWin numeric. Size (in pixels) of the moving window to detect local maxima. \href{https://CRAN.R-project.org/package=itcSegment}{itcSegment}
@@ -389,7 +440,7 @@ chmseg_ITC <- function(chm =NULL,
   # if (class(treepos) %in% c("RasterLayer", "RasterStack", "RasterBrick")) {
   #   chm <- raster::raster(chm)
   # }
-  if (!exists("path_run")) path_run = paste0(getwd(),"/")
+  if (!exists("path_run")) path_run = tempdir()
   maxcrown <- sqrt(maxCrownArea/ pi)*2
 
   crown_polygon <- itcSegment::itcIMG(imagery = chm,
@@ -400,10 +451,10 @@ chmseg_ITC <- function(chm =NULL,
                                       th = minTreeAlt,
                                       DIST = maxcrown,
                                       ischm = TRUE)
-  rgdal::writeOGR(crown_polygon,
-                  dsn = paste0(path_run, "crowns_itc", "localMax", minTreeAlt, "_crownDiam", maxCrownArea),
-                  layer = "result",
-                  driver= "ESRI Shapefile",
-                  overwrite=TRUE)
+  # rgdal::writeOGR(crown_polygon,
+  #                 dsn = paste0(path_run, "crowns_itc", "localMax", minTreeAlt, "_crownDiam", maxCrownArea),
+  #                 layer = "result",
+  #                 driver= "ESRI Shapefile",
+  #                 overwrite=TRUE)
   return(crown_polygon)
 }

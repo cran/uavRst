@@ -5,7 +5,7 @@
 \title{basic filtering of crown polygons using altitude, area and other optional thresholds}
 \usage{
 crown_filter(crownFn, minTreeAlt = 10, minCrownArea = 5,
-  maxCrownArea = 100, minTreeAltParam = "chmQ50", crownSTDW = NULL,
+  maxCrownArea = 100, minTreeAltParam = "chm_Q50", crownSTDW = NULL,
   opt = NULL, TAopt = NULL,
   proj4string = "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs")
 }
@@ -46,22 +46,23 @@ applies basic filtering of crown polygons using altitude, area and other optiona
                          global = TRUE,
                          path_prefix = "path_")
 # overide trailing backslash issue
- path_run<-ifelse(Sys.info()["sysname"]=="Windows", sub("/$", "",path_run),path_run)
  setwd(path_run)
 
 # get the data
 utils::download.file("https://github.com/gisma/gismaData/raw/master/uavRst/data/crowns.zip",
                        paste0(path_run,"crowns.zip"))
-unzip(zipfile = paste0(path_run,"crowns.zip"), exdir = path_run)
+unzip(zipfile = paste0(path_run,"crowns.zip"), exdir =".")
+
+ raster::plot(raster::shapefile(paste0(path_run,"polyStat.shp")))
 
 # start postclassification of segements
 tree_crowns <- crown_filter(crownFn =  paste0(path_run,"polyStat.shp"),
                              minTreeAlt = 3,
-                             minCrownArea = 1,
-                             maxCrownArea = 150,
+                             minCrownArea = 20,
+                             maxCrownArea = 50,
                              minTreeAltParam = "chmQ20" )
 # visualize it
-mapview::mapview(tree_crowns[[2]])
+raster::plot(tree_crowns[[2]])
 ##+}
 
 }
