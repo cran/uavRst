@@ -4,11 +4,20 @@
 \alias{pc_2D_dsm}
 \title{Create a Digital Terrain Model from UAV generated point clouds by minimum altitude sampling}
 \usage{
-pc_2D_dsm(laspcFile = NULL, gisdbasePath = NULL, grassVersion = 1,
-  searchPath = NULL, sampleMethod = "max", threshold = 20,
-  cutExtent = NULL, targetGridSize = 0.25, projFolder = NULL,
+pc_2D_dsm(
+  laspcFile = NULL,
+  gisdbasePath = NULL,
+  grassVersion = 1,
+  searchPath = NULL,
+  sampleMethod = "max",
+  threshold = 20,
+  cutExtent = NULL,
+  targetGridSize = 0.25,
+  projFolder = NULL,
   proj4 = "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs",
-  giLinks = NULL, verbose = FALSE)
+  giLinks = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{laspcFile}{character. default is \code{NULL} path  to the laz/las file(s)}
@@ -35,6 +44,9 @@ pc_2D_dsm(laspcFile = NULL, gisdbasePath = NULL, grassVersion = 1,
 
 \item{verbose}{to be quiet (1)}
 }
+\value{
+raster* object
+}
 \description{
 Create a Digital Surface Model from a high density point cloud as typically derived by an
 optical UAV retrieval. It simply samples the maximum or whatever values of a given target
@@ -51,7 +63,6 @@ giLinks$grass<-link2GI::linkGRASS7(returnPaths = TRUE)
 if (giLinks$grass$exist) {
 
 # proj subfolders
-owd <- getwd()
 projRootDir<-tempdir()
 unlink(paste0(projRootDir,"*"), force = TRUE)
 paths<-link2GI::initProj(projRootDir = projRootDir,
@@ -73,7 +84,6 @@ dsm <- pc_2D_dsm(laspcFile = "lasdata.las",
                 giLinks = giLinks)
                 }
  raster::plot(dsm)
- setwd(owd)
 }
 }
 \author{

@@ -4,9 +4,18 @@
 \alias{treepos_GWS}
 \title{Find potential tree positions using a canopy height model}
 \usage{
-treepos_GWS(chm = NULL, minTreeAlt = 10, minTreeAltParam = "chmQ20",
-  minCrownArea = 3, maxCrownArea = 150, join = 1, thresh = 0.1,
-  split = TRUE, cores = parallel::detectCores(), giLinks = NULL)
+treepos_GWS(
+  chm = NULL,
+  minTreeAlt = 10,
+  minTreeAltParam = "chmQ20",
+  minCrownArea = 3,
+  maxCrownArea = 150,
+  join = 1,
+  thresh = 0.1,
+  split = TRUE,
+  cores = parallel::detectCores(),
+  giLinks = NULL
+)
 }
 \arguments{
 \item{chm}{raster* canopy height model}
@@ -29,6 +38,11 @@ treepos_GWS(chm = NULL, minTreeAlt = 10, minTreeAltParam = "chmQ20",
 
 \item{giLinks}{list. of GI tools cli paths}
 }
+\value{
+raster* object
+
+return raster* object
+}
 \description{
 Find potential tree positions using a canopy height model by using an iterative watershed algorithm. Basically returns a  vector data sets with the tree crown geometries and a bunch of corresponding indices.
 }
@@ -40,7 +54,7 @@ require(uavRst)
 require(link2GI)
 
 # create and check the links to the GI software
-giLinks<-uavRst::linkAll()
+giLinks<-uavRst::linkGI()
 if (giLinks$saga$exist & giLinks$otb$exist & giLinks$grass$exist) {
 
 # project folder

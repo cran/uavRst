@@ -4,9 +4,15 @@
 \alias{chmseg_ITC}
 \title{Decision tree segmentation method to grow individual tree crowns based on 'itcSegment'}
 \usage{
-chmseg_ITC(chm = NULL, EPSG = 3064, movingWin = 7,
-  TRESHSeed = 0.45, TRESHCrown = 0.55, minTreeAlt = 2,
-  maxCrownArea = 100)
+chmseg_ITC(
+  chm = NULL,
+  EPSG = 3064,
+  movingWin = 7,
+  TRESHSeed = 0.45,
+  TRESHCrown = 0.55,
+  minTreeAlt = 2,
+  maxCrownArea = 100
+)
 }
 \arguments{
 \item{chm}{raster*, Canopy height model in \code{raster} or \code{SpatialGridDataFrame} file format. Should be the same that was used to create
@@ -24,6 +30,9 @@ the input for \code{treepos}.}
 
 \item{maxCrownArea}{numeric. A single value of the maximum projected tree crown area allowed. Default 100 sqm.
 height of \code{treepos}.}
+}
+\value{
+sp* object
 }
 \description{
 Segmentation of individual tree crowns as polygons based on a LiDAR derived canopy height model.

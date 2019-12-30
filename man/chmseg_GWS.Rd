@@ -4,12 +4,25 @@
 \alias{chmseg_GWS}
 \title{seeded region growing tree crown segmentation based on 'SAGA GIS'}
 \usage{
-chmseg_GWS(treepos = NULL, chm = NULL, minTreeAlt = 2,
-  minTreeAltParam = "chm_Q20", minCrownArea = 3, maxCrownArea = 100,
-  leafsize = 256, normalize = 0, neighbour = 1, method = 0,
-  thVarFeature = 1, thVarSpatial = 1, thSimilarity = 0.002,
-  segmentationBands = c("chm"), majorityRadius = 3, parallel = 1,
-  giLinks = NULL)
+chmseg_GWS(
+  treepos = NULL,
+  chm = NULL,
+  minTreeAlt = 2,
+  minTreeAltParam = "chm_Q20",
+  minCrownArea = 3,
+  maxCrownArea = 100,
+  leafsize = 256,
+  normalize = 0,
+  neighbour = 1,
+  method = 0,
+  thVarFeature = 1,
+  thVarSpatial = 1,
+  thSimilarity = 0.002,
+  segmentationBands = c("chm"),
+  majorityRadius = 3,
+  parallel = 1,
+  giLinks = NULL
+)
 }
 \arguments{
 \item{treepos}{raster* object}
@@ -48,6 +61,9 @@ height of \code{treepos}.}
 
 \item{giLinks}{list. of GI tools cli paths}
 }
+\value{
+sp* object
+}
 \description{
 Tree segmentation based on a CHM, basically returns a vector data set with the tree crown geometries and a bunch of corresponding indices. After the segementation itself, the results are hole filled and optionally, it can be filtered by a majority filter.
 }
@@ -58,7 +74,7 @@ require(uavRst)
 require(link2GI)
 ##- linkages
 ##- create and check the links to the GI software
-giLinks<-uavRst::linkAll(linkItems = c("saga","gdal"))
+giLinks<-uavRst::linkGI(linkItems = c("saga","gdal"))
 if (giLinks$saga$exist ) {
 
 ##- project folder

@@ -4,11 +4,18 @@
 \alias{glcm_texture}
 \title{Calls the glcm package with useful settings}
 \usage{
-glcm_texture(x, nrasters = 1:raster::nlayers(x), kernelSize = c(3),
-  stats = c("mean", "variance", "homogeneity", "contrast",
-  "dissimilarity", "entropy", "second_moment", "correlation"),
-  shift = list(c(0, 1), c(1, 1), c(1, 0), c(1, -1)), parallel = TRUE,
-  n_grey = 8, min_x = NULL, max_x = NULL)
+glcm_texture(
+  x,
+  nrasters = 1:raster::nlayers(x),
+  kernelSize = c(3),
+  stats = c("mean", "variance", "homogeneity", "contrast", "dissimilarity", "entropy",
+    "second_moment", "correlation"),
+  shift = list(c(0, 1), c(1, 1), c(1, 0), c(1, -1)),
+  parallel = TRUE,
+  n_grey = 8,
+  min_x = NULL,
+  max_x = NULL
+)
 }
 \arguments{
 \item{x}{rasterLayer or a rasterStack containing different channels}
@@ -30,6 +37,9 @@ glcm_texture(x, nrasters = 1:raster::nlayers(x), kernelSize = c(3),
 \item{max_x}{for each channel the maximum value which can occur. If NULL then the maximum value from the rasterLayer is used.
 This functions calls the glcm function from with standard settings
 and returns list of RasterStacks containing the texture parameters for each combination of channel and kernelSize}
+}
+\value{
+a raster* object
 }
 \description{
 Calls the glcm package with useful settings
@@ -56,8 +66,6 @@ Furthermore using stats will cover mean and variance while dissimilarity is high
 
 require(glcm)
 ## example on how to calculate texture with glcm
-owd <- getwd()
-setwd(tempdir())
 data("pacman")
 # call glcm wrapper
 result <- glcm_texture(pacman,
@@ -67,7 +75,6 @@ result <- glcm_texture(pacman,
 
 #plot the result:
 raster::plot(result[[1]])
-setwd(owd)
 }
 \seealso{
 \href{https://CRAN.R-project.org/package=glcm }{glcm package}

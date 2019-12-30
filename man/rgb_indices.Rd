@@ -4,9 +4,13 @@
 \alias{rgb_indices}
 \title{RGB indices}
 \usage{
-rgb_indices(red, green, blue, rgbi = c("VVI", "VARI", "NDTI", "RI",
-  "SCI", "BI", "SI", "HI", "TGI", "GLI", "NGRDI", "GRVI", "GLAI", "HUE",
-  "CI", "SAT", "SHP"))
+rgb_indices(
+  red,
+  green,
+  blue,
+  rgbi = c("VVI", "VARI", "NDTI", "RI", "SCI", "BI", "SI", "HI", "TGI", "GLI", "NGRDI",
+    "GRVI", "GLAI", "HUE", "CI", "SAT", "SHP")
+)
 }
 \arguments{
 \item{red}{a single \code{Raster} or \code{RasterBrick} band.}
@@ -35,6 +39,9 @@ rgb_indices(red, green, blue, rgbi = c("VVI", "VARI", "NDTI", "RI",
 \item \code{SAT}   (max(red,green,blue) - min(red,green,blue)) / max(red,green,blue) Overall Saturation Index
 \item \code{SHP}      2 * (red - green - blue) / (green - blue) Shape index
 }}
+}
+\value{
+raster* object
 }
 \description{
 This function calculates various spectral indices from a RGB. It returns at least red green and blue as splitted channels in a stack. Additionally you can choose RGB indices.

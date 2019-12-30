@@ -4,12 +4,24 @@
 \alias{ffs_train}
 \title{Forward feature selection based on rf model}
 \usage{
-ffs_train(trainingDF = NULL, predictors = c("R", "G", "B"),
-  response = "ID", spaceVar = "FN", names = c("ID", "R", "G", "B",
-  "A", "FN"), noLoc = NULL, sumFunction = "twoClassSummary",
-  pVal = 0.5, prefin = "final_", preffs = "ffs_",
-  modelSaveName = "model.RData", runtest = FALSE, seed = 100,
-  withinSE = TRUE, mtry = 2, noClu = 1)
+ffs_train(
+  trainingDF = NULL,
+  predictors = c("R", "G", "B"),
+  response = "ID",
+  spaceVar = "FN",
+  names = c("ID", "R", "G", "B", "A", "FN"),
+  noLoc = NULL,
+  sumFunction = "twoClassSummary",
+  pVal = 0.5,
+  prefin = "final_",
+  preffs = "ffs_",
+  modelSaveName = "model.RData",
+  runtest = FALSE,
+  seed = 100,
+  withinSE = TRUE,
+  mtry = 2,
+  noClu = 1
+)
 }
 \arguments{
 \item{trainingDF}{dataframe. containing training data}
@@ -44,12 +56,15 @@ ffs_train(trainingDF = NULL, predictors = c("R", "G", "B"),
 
 \item{noClu}{numeric. number of cluster to be used}
 }
+\value{
+model of a forward feature selection driven random forest classification
+}
 \description{
 ffs_train is a wrapper function for a simple use of the forward feature selection approach
 of training random forest classification models. This validation is particulary suitable for
 leave-location-out cross validations where variable selection
 MUST be based on the performance of the model on the hold out station.
-See \href{https://www.sciencedirect.com/science/article/pii/S1364815217310976}{Meyer et al. (2018)}
+See \href{https://doi.org/10.1016/j.envsoft.2017.12.001}{Meyer et al. (2018)}
 for further details.
 This is in fact the case while using time space variable vegetation patterns for classification purposes.
 For the UAV based RGB/NIR imagery, it provides an optimized preconfiguration for the classification goals.
@@ -72,16 +87,16 @@ paths<-link2GI::initProj(projRootDir = projRootDir,
                          global = TRUE,
                          path_prefix = "path_")
 setwd(path_run)
-unlink(paste0(path_run,"*"), force = TRUE)
+unlink(file.path(tempdir(),"*"), force = TRUE)
 
 ##- get the rgb image, chm and training data
 utils::download.file("https://github.com/gisma/gismaData/raw/master/uavRst/data/ffs.zip",
-                      paste0(path_run,"ffs.zip"))
-unzip(zipfile = paste0(path_run,"ffs.zip"),exdir = ".")
+                      file.path(tempdir(),"ffs.zip"))
+unzip(zipfile = file.path(tempdir(),"ffs.zip"),exdir = ".")
 
 ##- get geometrical training data assuming that you have used before the calc_ext function
-trainDF<-readRDS(paste0(path_run,"tutorial_trainDF.rds"))
-load(paste0(path_run,"tutorialbandNames.RData"))
+trainDF<-readRDS(file.path(tempdir(),"tutorial_trainDF.rds"))
+load(file.path(tempdir(),"tutorialbandNames.RData"))
 
 ##- define the classes
  idNumber=c(1,2,3)

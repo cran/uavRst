@@ -4,8 +4,7 @@
 \alias{chmseg_RL}
 \title{Watershed segmentation based on 'rLiDAR'}
 \usage{
-chmseg_RL(treepos = NULL, chm = NULL, maxCrownArea = 100,
-  exclusion = 0.2)
+chmseg_RL(treepos = NULL, chm = NULL, maxCrownArea = 100, exclusion = 0.2)
 }
 \arguments{
 \item{treepos}{numeric. \code{matrix} or \code{data.frame} with three columns (tree xy coordinates and height).
@@ -18,6 +17,9 @@ the input for \code{treepos}.}
 height of \code{treepos}.}
 
 \item{exclusion}{numeric. A single value from 0 to 1 that represents the percent of pixel exclusion.}
+}
+\value{
+sp* object
 }
 \description{
 'rLiDAR' segmentation of individual tree crowns based on a canopy height model and initial seeding points (trees). Generic segmentation algorithm

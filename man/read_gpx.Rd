@@ -4,13 +4,18 @@
 \alias{read_gpx}
 \title{Read a GPX file.}
 \usage{
-read_gpx(file, layers = c("waypoints", "tracks", "routes",
-  "track_points", "route_points"))
+read_gpx(
+  file,
+  layers = c("waypoints", "tracks", "routes", "track_points", "route_points")
+)
 }
 \arguments{
 \item{file}{a GPX filename (including directory)}
 
 \item{layers}{vector of GPX layers. Possible options are \code{"waypoints"}, \code{"tracks"}, \code{"routes"}, \code{"track_points"}, \code{"route_points"}. By dedault, all those layers are read.}
+}
+\value{
+a sp* object containing the gpx track objects
 }
 \description{
 Read a GPX file. By default, it reads all possible GPX layers, and only returns shapes for layers that have any features.

@@ -4,23 +4,46 @@
 \alias{calc_ext}
 \title{Convenient function to preprocess synthetic raster bands from a given RGB image and/or DTM/DSM data.}
 \usage{
-calc_ext(calculateBands = FALSE, extractTrain = TRUE,
-  prefixRun = "temp", patterndemFiles = "dem", prefixTrainImg = "",
-  prefixTrainGeom = "", suffixTrainImg = "", suffixTrainGeom = "",
-  patternIdx = "index", patternImgFiles = "", channels = c("red",
-  "green", "blue"), hara = TRUE, haraType = c("simple", "advanced",
-  "higher"), stat = TRUE, edge = TRUE, edgeType = c("gradient",
-  "sobel", "touzi"), morpho = TRUE, morphoType = c("dilate", "erode",
-  "opening", "closing"), rgbi = TRUE, indices = c("VVI", "VARI",
-  "NDTI", "RI", "SCI", "BI", "SI", "HI", "TGI", "GLI", "NGRDI", "GRVI",
-  "GLAI", "HUE", "CI", "SAT", "SHP"), rgbTrans = TRUE,
-  colorSpaces = c("CIELab", "CMY", "Gray", "HCL", "HSB", "HSI", "Log",
-  "XYZ", "YUV"), pardem = TRUE, demType = c("hillshade", "slope",
-  "aspect", "TRI", "TPI", "Roughness", "SLOPE", "ASPECT", "C_GENE",
-  "C_PROF", "C_PLAN", "C_TANG", "C_LONG", "C_CROS", "C_MINI", "C_MAXI",
-  "C_TOTA", "C_ROTO", "MTPI"), morphoMethod = 6, minScale = 1,
-  maxScale = 8, numScale = 2, kernel = 3, currentDataFolder = NULL,
-  currentIdxFolder = NULL, cleanRunDir = TRUE, giLinks = NULL)
+calc_ext(
+  calculateBands = FALSE,
+  extractTrain = TRUE,
+  prefixRun = "temp",
+  patterndemFiles = "dem",
+  prefixTrainImg = "",
+  prefixTrainGeom = "",
+  suffixTrainImg = "",
+  suffixTrainGeom = "",
+  patternIdx = "index",
+  patternImgFiles = "",
+  channels = c("red", "green", "blue"),
+  hara = TRUE,
+  haraType = c("simple", "advanced", "higher"),
+  stat = TRUE,
+  edge = TRUE,
+  edgeType = c("gradient", "sobel", "touzi"),
+  morpho = TRUE,
+  morphoType = c("dilate", "erode", "opening", "closing"),
+  rgbi = TRUE,
+  indices = c("VVI", "VARI", "NDTI", "RI", "SCI", "BI", "SI", "HI", "TGI", "GLI",
+    "NGRDI", "GRVI", "GLAI", "HUE", "CI", "SAT", "SHP"),
+  rgbTrans = TRUE,
+  colorSpaces = c("CIELab", "CMY", "Gray", "HCL", "HSB", "HSI", "Log", "XYZ", "YUV"),
+  pardem = TRUE,
+  demType = c("hillshade", "slope", "aspect", "TRI", "TPI", "Roughness", "SLOPE",
+    "ASPECT", "C_GENE", "C_PROF", "C_PLAN", "C_TANG", "C_LONG", "C_CROS", "C_MINI",
+    "C_MAXI", "C_TOTA", "C_ROTO", "MTPI"),
+  morphoMethod = 6,
+  minScale = 1,
+  maxScale = 8,
+  numScale = 2,
+  kernel = 3,
+  currentDataFolder = NULL,
+  currentIdxFolder = NULL,
+  cleanRunDir = TRUE,
+  sagaLinks = NULL,
+  gdalLinks = NULL,
+  otbLinks = NULL
+)
 }
 \arguments{
 \item{calculateBands}{logical. switch for set on calculation of syntheic bands and indices default = TRUE}
@@ -87,7 +110,14 @@ calc_ext(calculateBands = FALSE, extractTrain = TRUE,
 
 \item{cleanRunDir}{logical. TRUE logical switch for deleting the calculated tifs, default is TRUE}
 
-\item{giLinks}{list. GI tools cli paths}
+\item{sagaLinks}{list. SAGA tools cli paths}
+
+\item{gdalLinks}{list. GDAL tools cli paths}
+
+\item{otbLinks}{list. OTB tools cli paths}
+}
+\value{
+data frame containing for each drawn point the pixel values of the rasterstack data
 }
 \description{
 Convenient function to preprocess synthetic raster bands from a given RGB image and/or DTM/DSM data.
@@ -115,60 +145,68 @@ This approach needs at least a pair of images that differ in time and/or space f
 If you just want to classify a single image by a single training file use the normal procedure as provided by the \code{\link[caret]{trainControl}} function.
 }
 \examples{
+
 \dontrun{
 
-##- required packages
 require(uavRst)
 require(link2GI)
 
 # create and check the links to the GI software
-giLinks<-uavRst::linkAll()
-if (giLinks$saga$exist & giLinks$otb$exist){
-#'
+sagaLinks<-link2GI::linkSAGA()
+gdalLinks<-link2GI::linkGDAL()
+otbLinks<-link2GI::linkOTB()
+
+
 ##- create and set folders
 ##- please mind that the pathes are exported as global variables
 paths<-link2GI::initProj(projRootDir = tempdir(),
                          projFolders = c("data/","data/ref/","output/","run/","las/"),
                          global = TRUE,
                          path_prefix = "path_")
-
+  
 ##- clean runtime folder
-unlink(paste0(path_run,"*"), force = TRUE)
-
+unlink(file.path(tempdir(),"*"), force = TRUE)
+  
 ##- get the tutorial data
-utils::download.file("https://github.com/gisma/gismaData/raw/master/uavRst/data/tutorial_data.zip",
-                     paste0(path_run,"tutorial_data.zip"))
-unzip(zipfile = paste0(path_run,"tutorial_data.zip"), exdir = R.utils::getAbsolutePath(path_run))
-
-##- calculate some synthetic channels from the RGB image and the canopy height model
-##- then extract the from the corresponding training geometries the data values aka trainingdata
-trainDF <- calc_ext(calculateBands    = TRUE,
-                    extractTrain      = TRUE,
-                    suffixTrainGeom   = "",
-                    patternIdx        = "index",
-                    patternImgFiles   = "rgb" ,
-                    patterndemFiles   = "chm",
-                    prefixRun         = "tutorial",
-                    prefixTrainImg    = "",
-                    rgbi              = TRUE,
-                    indices           = c("TGI","CI"),
-                    channels          = c("red"),
-                    rgbTrans          = FALSE,
-                    hara              = FALSE,
-                    haraType          = c("simple"),
-                    stat              = FALSE,
-                    edge              = FALSE,
-                    morpho            = FALSE,
-                    pardem            = TRUE,
-                    demType           = c("slope", "MTPI"),
-                    kernel            = 3,
-                    currentDataFolder = path_run,
-                    currentIdxFolder  = path_run,
-                    giLinks = giLinks)
+url<-"https://github.com/gisma/gismaData/raw/master/uavRst/data/tutorial_data.zip"
+utils::download.file(url,
+                       file.path(tempdir(),"tutorial_data.zip"))
+unzip(zipfile = file.path(tempdir(),"tutorial_data.zip"), 
+                          exdir = R.utils::getAbsolutePath(path_run))
+  
+  ##- calculate some synthetic channels from the RGB image and the canopy height model
+  ##- then extract the from the corresponding training geometries the data values aka trainingdata
+  trainDF <- calc_ext(calculateBands    = TRUE,
+                      extractTrain      = TRUE,
+                      suffixTrainGeom   = "",
+                      patternIdx        = "index",
+                      patternImgFiles   = "rgb" ,
+                      patterndemFiles   = "chm",
+                      prefixRun         = "tutorial",
+                      prefixTrainImg    = "",
+                      rgbi              = TRUE,
+                      indices           = c("TGI","CI"),
+                      channels          = c("red"),
+                      rgbTrans          = TRUE,
+                      hara              = TRUE,
+                      haraType          = c("simple"),
+                      stat              = TRUE,
+                      edge              = TRUE,
+                      morpho            = TRUE,
+                      pardem            = TRUE,
+                      #demType           = c("slope", "MTPI"),
+                      kernel            = 3,
+                      currentDataFolder = path_run,
+                      currentIdxFolder  = path_run,
+                      sagaLinks = sagaLinks,
+                      gdalLinks = gdalLinks,
+                      otbLinks =otbLinks)
+  
 
 ##- show the result
 head(trainDF)
+
 # use ffs_train as next step for rf classification issues
+
 }
-##+}
 }

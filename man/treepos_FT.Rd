@@ -4,9 +4,13 @@
 \alias{treepos_FT}
 \title{'ForestTools' tree top detection}
 \usage{
-treepos_FT(chm = NULL, winFun = function(x) {     0.5 * ((x^2) * 0.009
-  + 2.51) }, minTreeAlt = 2, maxCrownArea = maxCrownArea,
-  verbose = TRUE)
+treepos_FT(
+  chm = NULL,
+  winFun = function(x) {     0.5 * ((x^2) * 0.009 + 2.51) },
+  minTreeAlt = 2,
+  maxCrownArea = maxCrownArea,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{chm}{Canopy height model in \code{raster}, \code{lasmetrics}, \code{matrix} or  object of \code{class LAS}.
@@ -23,6 +27,9 @@ and return the desired radius of the circular search window when centered on tha
 
 \item{verbose}{quiet (1)
 height of \code{treepos}.}
+}
+\value{
+raster* object
 }
 \description{
 Implements the variable window filter algorithm (Popescu & Wynne, 2004)

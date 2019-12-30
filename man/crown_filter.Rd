@@ -4,10 +4,17 @@
 \alias{crown_filter}
 \title{basic filtering of crown polygons using altitude, area and other optional thresholds}
 \usage{
-crown_filter(crownFn, minTreeAlt = 10, minCrownArea = 5,
-  maxCrownArea = 100, minTreeAltParam = "chm_Q50", crownSTDW = NULL,
-  opt = NULL, TAopt = NULL,
-  proj4string = "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs")
+crown_filter(
+  crownFn,
+  minTreeAlt = 10,
+  minCrownArea = 5,
+  maxCrownArea = 100,
+  minTreeAltParam = "chm_Q50",
+  crownSTDW = NULL,
+  opt = NULL,
+  TAopt = NULL,
+  proj4string = "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs"
+)
 }
 \arguments{
 \item{crownFn}{filname of OGR compliant vector file}
@@ -46,17 +53,16 @@ applies basic filtering of crown polygons using altitude, area and other optiona
                          global = TRUE,
                          path_prefix = "path_")
 # overide trailing backslash issue
- setwd(path_run)
 
 # get the data
 utils::download.file("https://github.com/gisma/gismaData/raw/master/uavRst/data/crowns.zip",
-                       paste0(path_run,"crowns.zip"))
-unzip(zipfile = paste0(path_run,"crowns.zip"), exdir =".")
+                       file.path(tempdir(),"crowns.zip"))
+unzip(zipfile = file.path(tempdir(),"crowns.zip"), exdir =".")
 
- raster::plot(raster::shapefile(paste0(path_run,"polyStat.shp")))
+ raster::plot(raster::shapefile(file.path(tempdir(),"polyStat.shp")))
 
 # start postclassification of segements
-tree_crowns <- crown_filter(crownFn =  paste0(path_run,"polyStat.shp"),
+tree_crowns <- crown_filter(crownFn =  file.path(tempdir(),"polyStat.shp"),
                              minTreeAlt = 3,
                              minCrownArea = 20,
                              maxCrownArea = 50,

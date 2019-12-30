@@ -10,31 +10,30 @@
 #' @param retRaster logical if true a rasterstack is returned
 #' @param verbose be quiet
 #' @export colorspace
-
+#'@return raster* object
 #' @examples
 #' \dontrun{
 #'
 #' ##- required packages
 #' require(uavRst)
 #' setwd(tempdir())
-#' ##- set locale
-#' tmp<-Sys.setlocale('LC_ALL','C')
-#' ##- get some typical data as provided by the authority
-#' utils::download.file(url="http://www.ldbv.bayern.de/file/zip/5619/DOP%2040_CIR.zip",
-#'                      destfile="testdata.zip")
-#' unzip("testdata.zip",junkpaths = TRUE,overwrite = TRUE)
+#' data("rgb")
+#' raster::plotRGB(rgb)
+#' fn<-file.path(tempdir(),"rgb.tif")
+#' raster::writeRaster(rgb, 
+#'                     filename=fn,
+#'                     format="GTiff", 
+#'                     overwrite=TRUE)
 
 #' ##- original color space
-#' raster::plotRGB(raster::stack("4490600_5321400.tif"))
+#' raster::plotRGB(raster::stack("rgb.tif"))
 
 #' ##- change colorspace from RGB to HSI
-#' r2 <- colorspace(input="4490600_5321400.tif",colorspace="HSI")
+#' r2 <- colorspace(input="rgb.tif",colorspace="HSI")
 #' 
 #' ##- visualize it
 #' raster::plotRGB(r2)
 #' 
-#' ##- reset locale
-#' tmp<-Sys.setlocale(category = "LC_ALL", locale = "de_DE.-8")
 #' ##+}
 
 
@@ -64,7 +63,7 @@ colorspace<- function(input=NULL,
     command<-paste(command,  outName)
 
     if (verbose) {
-      cat("\nrunning cmd:  ", command,"\n")
+      message("\nrunning cmd:  ", command,"\n")
       system(command)}
     else{
       ret<-system(command,intern = TRUE,ignore.stdout = TRUE,ignore.stderr = TRUE)}

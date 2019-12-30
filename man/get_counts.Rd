@@ -4,9 +4,16 @@
 \alias{get_counts}
 \title{counts pixel values according to their classes}
 \usage{
-get_counts(ids = c(1, 2), position = NULL, imageFiles = NULL,
-  buffersize = 1.5, outPrefix = "classified_index_", ext = ".tif",
-  path = tempdir(), dropChars = 0)
+get_counts(
+  ids = c(1, 2),
+  position = NULL,
+  imageFiles = NULL,
+  buffersize = 1.5,
+  outPrefix = "classified_index_",
+  ext = ".tif",
+  path = tempdir(),
+  dropChars = 0
+)
 }
 \arguments{
 \item{ids}{numeric. the ids used for the training}
@@ -24,6 +31,9 @@ get_counts(ids = c(1, 2), position = NULL, imageFiles = NULL,
 \item{path}{character. output path}
 
 \item{dropChars}{numeric. number of characters that should be dropped at the end of the filename}
+}
+\value{
+data frame containing the number of pixels per class
 }
 \description{
 counts pixel values according to their classes

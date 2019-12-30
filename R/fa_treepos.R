@@ -21,9 +21,9 @@ if (!isGeneric('treepos')) {
 #'@param split split polygons default is TRUE
 #'@param cores number of cores to be used
 #'@param giLinks        list. of GI tools cli paths
-
+#'@return raster* object
 #'
-#'
+#'return raster* object
 #'@export treepos_GWS
 #'@examples
 #'\dontrun{
@@ -33,7 +33,7 @@ if (!isGeneric('treepos')) {
 #' require(link2GI)
 #'
 #' # create and check the links to the GI software
-#' giLinks<-uavRst::linkAll()
+#' giLinks<-uavRst::linkGI()
 #' if (giLinks$saga$exist & giLinks$otb$exist & giLinks$grass$exist) {
 #'
 #' # project folder
@@ -72,11 +72,11 @@ treepos_GWS <- function(chm = NULL,
 
 )  {
   if (!exists("path_run")) path_run = tempdir()
-  cat("\n:: start crown identification...\n")
+  message("\n:: start crown identification...\n")
   options(warn=-1)
 
   if (is.null(giLinks)){
-    giLinks <- linkAll()
+    giLinks <- linkGI()
   }
 
   gdal <- giLinks$gdal
@@ -86,7 +86,7 @@ treepos_GWS <- function(chm = NULL,
   raster::writeRaster(chm,file.path(R.utils::getAbsolutePath(path_run),"chm.tif"),overwrite = TRUE,NAflag = 0)
   #r2saga(chm,"chm")
 
-    cat(":: run pre-segmentation...\n")
+    message(":: run pre-segmentation...\n")
     # first segment run is a simple watershed segmentation just for deriving more reliable treepos´
     # TODO improve different advanceds treepos finding algorithms
     ret <- system(paste0(sagaCmd, " imagery_segmentation 0 ",
@@ -108,10 +108,10 @@ treepos_GWS <- function(chm = NULL,
                          " -CLASS_ID 1.000000",
                          " -SPLIT 1"),
                   intern = TRUE)
-    cat(":: filter results...\n")
+    message(":: filter results...\n")
 
     #
-    cat(":: find max height position...\n")
+    message(":: find max height position...\n")
     if (cores<2) para<-0
     else para = 1
     dummycrownsStat <- uavRst::poly_stat(c("chm"), 
@@ -130,7 +130,7 @@ treepos_GWS <- function(chm = NULL,
                     dsn    = file.path(R.utils::getAbsolutePath(path_run)),
                     overwrite_layer = TRUE)
 
-    cat(":: find max height position...\n")
+    message(":: find max height position...\n")
     ts <-  poly_maxpos(file.path(R.utils::getAbsolutePath(path_run),"chm.tif"),
                        file.path(R.utils::getAbsolutePath(path_run),"dummyCrownSegment"),
                        polySplit = split,
@@ -185,8 +185,9 @@ treepos_GWS <- function(chm = NULL,
 #' @param movingWin Size (in pixels) of the moving window to detect local maxima.
 #' @param minTreeAlt Height threshold (m) below a pixel cannot be a local maximum. Local maxima values are used to define tree tops.
 #' @export treepos_RL
+#' @return  raster* object
 #' @examples
-#' 
+#' \dontrun{
 #' ## required packages
 #' require(uavRst)
 #'
@@ -199,6 +200,7 @@ treepos_GWS <- function(chm = NULL,
 #'                     minTreeAlt = 10)
 #' ## visualisation
 #' raster::plot(tPosRL)
+#' }
 
 
 
@@ -224,7 +226,7 @@ treepos_RL <- function(chm =NULL,
 #' the input for \code{treepos}.
 #' @param movingWin Size (in pixels) of the moving window to detect local maxima.
 #' @param minTreeAlt Height threshold (m) below a pixel cannot be a local maximum. Local maxima values are used to define tree tops.
-
+#' @return  raster* object
 #' @export treepos_lidR
 #' @examples
 #' \dontrun{
@@ -276,7 +278,7 @@ treepos_lidR <- function(chm =NULL,
 #' @param maxCrownArea numeric. A single value of the maximum individual tree crown radius expected.
 #' @param verbose quiet (1)
 #' height of \code{treepos}.
-
+#' @return  raster* object
 #' @export treepos_FT
 #' @examples
 

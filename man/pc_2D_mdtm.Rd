@@ -4,12 +4,23 @@
 \alias{pc_2D_mdtm}
 \title{Create a Digital Terrain Model from UAV generated point clouds by minimum altitude sampling (multiple resolutions of sampling gridsize)}
 \usage{
-pc_2D_mdtm(laspcFile = NULL, gisdbasePath = NULL, grassVersion = 1,
-  searchPath = NULL, tension = 20, sampleMethod = "min",
-  cutExtent = NULL, sampleGridSize = c(100, 50, 25), sw_range = 0.2,
-  targetGridSize = 0.1, splineThresGridSize = 0.5, projFolder = NULL,
+pc_2D_mdtm(
+  laspcFile = NULL,
+  gisdbasePath = NULL,
+  grassVersion = 1,
+  searchPath = NULL,
+  tension = 20,
+  sampleMethod = "min",
+  cutExtent = NULL,
+  sampleGridSize = c(100, 50, 25),
+  sw_range = 0.2,
+  targetGridSize = 0.1,
+  splineThresGridSize = 0.5,
+  projFolder = NULL,
   proj4 = "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs +ellps=WGS84",
-  giLinks = giLinks, verbose = FALSE)
+  giLinks = giLinks,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{laspcFile}{character. default is \code{NULL} path  to the laz/las file(s)}
@@ -42,6 +53,9 @@ first step spline interpolation using the treshold gridsize second step bilinear
 \item{giLinks}{list of link2GI cli pathes, default is NULL}
 
 \item{verbose}{to be quiet (1)}
+}
+\value{
+Digital Terrain Model from UAV generated point clouds as  raster* object
 }
 \description{
 Create a Digital Terrain Model from a high density point cloud as typically derived by an optical UAV retrieval. Due to the poor estimation of ground points
